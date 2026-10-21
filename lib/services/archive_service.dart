@@ -805,8 +805,7 @@ class ArchiveService extends ChangeNotifier {
 
         if (source.metadataOnly)
           for (final s in enabledSources)
-            if (!s.metadataOnly && s.server == null && s.tracker == null)
-              s,
+            if (s.streamOnly && !s.metadataOnly) s,
         if (source.streamOnly)
           for (final s in enabledSources)
             if (s.streamOnly &&
