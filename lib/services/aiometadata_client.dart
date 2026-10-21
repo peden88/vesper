@@ -19,19 +19,19 @@ class AioMetadataClient {
     final base = manifestUrl.pathSegments.toList();
     if (base.isNotEmpty && base.last == 'manifest.json') base.removeLast();
     final segments = [...base.where((s) => s.isNotEmpty), ...parts];
-    if (extras.isNotEmpty) {
-      segments.add(extras.entries.map((e) =>
-          '${e.key}=${e.value}').join('&'));
-    }
-    final uri = manifestUrl.replace(pathSegments: segments);
-    // Stremio extras are one path segment with raw '&' and '=' delimiters.
-    // Uri.pathSegments escapes these delimiters, so restore them only in
-    // the final extra segment (values are still percent-encoded).
-    if (extras.isEmpty) return uri;
-    final encodedExtra = extras.entries.map((e) =>
-        '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&');
-    final path = uri.path.substring(0, uri.path.lastIndexOf('/') + 1) + encodedExtra;
-    return uri.replace(path: Uri.decodeFull(path));
+    // Stremio extras precede the .json suffix: /catalog/movie/id/skip=20.json.
+    if (extras.isEmpty) return manifestUrl.replace(pathSegments: segments);
+    final encodedExtra = extras.entries
+        .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+    final finalSegment = segments.removeLast();
+    final suffix = finalSegment.endsWith('.json') ? '.json' : '';
+    final prefix = suffix.isEmpty
+        ? finalSegment
+        : finalSegment.substring(0, finalSegment.length - suffix.length);
+    final path = '/${segments.map(Uri.encodeComponent).join('/')}/'
+        '${Uri.encodeComponent(prefix)}/$encodedExtra$suffix';
+    return manifestUrl.replace(path: path);
   }
 
   Future<Map<String, dynamic>> _get(Uri uri) async {
