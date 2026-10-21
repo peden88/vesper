@@ -32,8 +32,30 @@ void main() {
     expect((await client.catalogs()).length, 2);
     expect((await client.catalogItems(type: 'movie', id: 'popular', skip: 20)).single['id'], 'tt123');
     expect((await client.metadata(type: 'movie', id: 'tt123'))?['name'], 'Example');
-    expect(requested.any((u) => u.contains('/private-token/catalog/movie/popular/skip=20')), isTrue);
+    expect(requested.any((u) => u.contains('/private-token/catalog/movie/popular/skip=20.json')), isTrue);
     expect(requested.any((u) => u.contains('/private-token/meta/movie/tt123.json')), isTrue);
+    client.dispose();
+  });
+
+  test('encodes search as a Stremio extra path segment', () async {
+    final requested = <Uri>[];
+    final client = AioMetadataClient(
+      Uri.parse('https://example.org/token/manifest.json'),
+      client: MockClient((request) async {
+        requested.add(request.url);
+        if (request.url.path.endsWith('/manifest.json')) {
+          return http.Response(jsonEncode({
+            'catalogs': [
+              {'type': 'movie', 'id': 'find', 'extra': [{'name': 'search'}]}
+            ],
+          }), 200);
+        }
+        return http.Response(jsonEncode({'metas': []}), 200);
+      }),
+    );
+    await client.catalogItems(type: 'movie', id: 'find', search: 'A & B');
+    expect(requested.last.path, '/token/catalog/movie/find/search=A & B.json');
+    expect(requested.last.toString(), contains('search=A%20%26%20B.json'));
     client.dispose();
   });
 
