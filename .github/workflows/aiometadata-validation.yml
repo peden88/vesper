@@ -1,0 +1,28 @@
+name: AIOMetadata integration validation
+
+on:
+  push:
+    branches:
+      - feature/aiometadata-primary
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  flutter-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze integration source
+        run: dart analyze lib/services/aiometadata_client.dart lib/services/archive_api_service.dart lib/services/archive_service.dart lib/models/archive_models.dart lib/screens/settings/aiometadata_settings_screen.dart lib/screens/settings/settings_menu_screen.dart
+      - name: Run AIOMetadata tests
+        run: flutter test test/aiometadata_client_test.dart test/aiometadata_manifest_validation_test.dart
