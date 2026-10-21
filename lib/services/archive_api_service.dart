@@ -99,7 +99,8 @@ class ArchiveApiService {
     // grids into just its custom row under Other (user report, 2026-10-20).
     // An add-on that only has custom catalogs and no IMDb streams keeps
     // them (adult add-ons, browsed under Other).
-    if (catalogs.every((c) => c.wireType != null)) {
+    if (resources.contains('stream') &&
+        catalogs.every((c) => c.wireType != null)) {
       final streamRes =
           resourceList.whereType<Map>().where((r) => r['name'] == 'stream');
       final prefixes = <String>{
