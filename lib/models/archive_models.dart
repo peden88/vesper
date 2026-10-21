@@ -327,6 +327,7 @@ class ArchiveSource {
     this.logoUrl,
     this.catalogs = const [],
     this.catalogProviderUrl,
+    this.metadataOnly = false,
     this.enabled = true,
     this.server,
     this.tracker,
@@ -343,6 +344,7 @@ class ArchiveSource {
   /// fetched from ([ArchiveCatalogProvider.baseUrl]). Null when the source
   /// serves its own catalogs.
   final String? catalogProviderUrl;
+  final bool metadataOnly;
   final bool enabled;
 
   /// Set for a Jellyfin/Emby server source.
@@ -407,6 +409,7 @@ class ArchiveSource {
         logoUrl: logoUrl,
         catalogs: catalogs ?? this.catalogs,
         catalogProviderUrl: catalogProviderUrl,
+        metadataOnly: metadataOnly,
         enabled: enabled ?? this.enabled,
         server: server,
         tracker: tracker ?? this.tracker,
@@ -421,6 +424,7 @@ class ArchiveSource {
         'catalogs': [for (final c in catalogs) c.toJson()],
         if (catalogProviderUrl != null) 'catalogProvider': catalogProviderUrl,
         'enabled': enabled,
+        if (metadataOnly) 'metadataOnly': true,
         if (server != null) 'server': server!.toJson(),
         if (tracker != null) 'tracker': tracker!.toJson(),
         if (otherChoice != null) 'other': otherChoice,
@@ -448,6 +452,7 @@ class ArchiveSource {
           : ArchiveCatalogProvider.catalogsFor(
               {for (final c in stored) c.type}),
       catalogProviderUrl: provider,
+      metadataOnly: j['metadataOnly'] == true,
       enabled: j['enabled'] != false,
       server: MediaServerLogin.fromJson(j['server']),
       tracker: TrackerLogin.fromJson(j['tracker']),
