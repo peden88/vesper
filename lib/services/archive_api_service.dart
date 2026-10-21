@@ -136,6 +136,7 @@ class ArchiveApiService {
       logoUrl: j['logo']?.toString(),
       catalogs: catalogs,
       catalogProviderUrl: providerUrl,
+      metadataOnly: !resources.contains('stream'),
     );
   }
 
