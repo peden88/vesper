@@ -21,9 +21,17 @@ class AioMetadataClient {
     final segments = [...base.where((s) => s.isNotEmpty), ...parts];
     if (extras.isNotEmpty) {
       segments.add(extras.entries.map((e) =>
-          '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&'));
+          '${e.key}=${e.value}').join('&'));
     }
-    return manifestUrl.replace(pathSegments: segments);
+    final uri = manifestUrl.replace(pathSegments: segments);
+    // Stremio extras are one path segment with raw '&' and '=' delimiters.
+    // Uri.pathSegments escapes these delimiters, so restore them only in
+    // the final extra segment (values are still percent-encoded).
+    if (extras.isEmpty) return uri;
+    final encodedExtra = extras.entries.map((e) =>
+        '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&');
+    final path = uri.path.substring(0, uri.path.lastIndexOf('/') + 1) + encodedExtra;
+    return uri.replace(path: Uri.decodeFull(path));
   }
 
   Future<Map<String, dynamic>> _get(Uri uri) async {
