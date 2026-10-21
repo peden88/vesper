@@ -249,6 +249,22 @@ class ArchiveService extends ChangeNotifier {
     return source;
   }
 
+  /// Add an AIOMetadata-style catalog/metadata provider without requiring
+  /// it to expose playable streams.
+  Future<ArchiveSource> addMetadataSource(String link) async {
+    final source = await _api.fetchManifest(link, allowMetadataOnly: true);
+    if (source.catalogs.isEmpty) {
+      throw ArchiveApiException('Metadata source has no browseable catalogs.');
+    }
+    final list = sources;
+    if (list.any((s) => s.manifestUrl == source.manifestUrl)) {
+      throw StateError('already added');
+    }
+    await _saveSources([source, ...list]);
+    unawaited(refresh(force: true));
+    return source;
+  }
+
   /// Signs in to a Jellyfin/Emby server and adds it (signing in again as
   /// the same user replaces the old login). Throws
   /// [MediaServerLoginException] (wrong user/password),
@@ -785,7 +801,12 @@ class ArchiveService extends ChangeNotifier {
         if (source.tracker != null)
           for (final s in enabledSources)
             if (s.streamOnly) s,
-        if (source.tracker == null) source,
+        if (source.tracker == null && !source.metadataOnly) source,
+
+        if (source.metadataOnly)
+          for (final s in enabledSources)
+            if (!s.metadataOnly && s.server == null && s.tracker == null)
+              s,
         if (source.streamOnly)
           for (final s in enabledSources)
             if (s.streamOnly &&
