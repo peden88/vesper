@@ -67,7 +67,7 @@ class ArchiveApiService {
   /// gets its grids from [ArchiveCatalogProvider]. Throws
   /// [ArchiveApiException] when it's neither (stream-only on its own ids
   /// leaves nothing to browse), or offers no `stream` resource.
-  Future<ArchiveSource> fetchManifest(String input) async {
+  Future<ArchiveSource> fetchManifest(String input, {bool allowMetadataOnly = false}) async {
     final url = normalizeManifestUrl(input);
     final j = await _getJson(Uri.parse(url));
     final resourceList = j['resources'] as List? ?? const [];
@@ -75,8 +75,11 @@ class ArchiveApiService {
         .map((e) => e is Map ? e['name']?.toString() : e?.toString())
         .toSet();
     // A manifest can omit 'catalog' from resources and still list catalogs.
-    if (!resources.contains('stream')) {
+    if (!resources.contains('stream') && !allowMetadataOnly) {
       throw ArchiveApiException('This source offers no streams.');
+    }
+    if (!resources.contains('stream') && !resources.contains('meta')) {
+      throw ArchiveApiException('This source offers neither streams nor metadata.');
     }
     final catalogs = <ArchiveCatalog>[];
     for (final c in (j['catalogs'] as List? ?? const [])) {
