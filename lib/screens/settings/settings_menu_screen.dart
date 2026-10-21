@@ -21,6 +21,7 @@ import 'transfer_screen.dart';
 import 'theme_screen.dart';
 import 'addons_screen.dart';
 import 'archive_sources_screen.dart';
+import 'aiometadata_settings_screen.dart';
 import 'trackers_screen.dart';
 import 'tmdb_settings_screen.dart';
 import '../../l10n/l10n.dart';
@@ -142,6 +143,11 @@ class _SettingsMenuScreenState extends State<SettingsMenuScreen> {
                 tr('Media Hub sources'),
                 tr('Add-on sources for the Media Hub tab'),
                 (_) => const ArchiveSourcesScreen()),
+            _Entry(
+                Icons.movie_filter_outlined,
+                'AIOMetadata',
+                'Primary catalogs and metadata manifest',
+                (_) => const AioMetadataSettingsScreen()),
             // Online subtitles: both players (Windows' own since its
             // Subtitles button, desktop_subtitles.dart).
             _Entry(
